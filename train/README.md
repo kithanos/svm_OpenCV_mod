@@ -15,7 +15,7 @@ Pacotes necessários:
 OpenCV 2.4
 
 Programa compilado e testado em:
-gcc (Ubuntu 5.4.0-6ubuntu1~16.04.12) 5.4.0 20160609
+GNU 5.4.0
 cmake version 3.5.1
 
 OBS: Caso precise compilar o programa mais de uma vez, apagar todos os arquivos e pasta gerados pelo cmake,
@@ -24,7 +24,7 @@ OBS: Caso precise compilar o programa mais de uma vez, apagar todos os arquivos 
 
 --------------------------------------EXECUÇÃO--------------------------------------------------
 
-./svm com parâmetros:
+./svm_train com parâmetros:
 
 -d dimensão SVM 
 nº de elementos de cada vetor de treino
@@ -53,7 +53,7 @@ com os vetores de suporte.
 
 Exemplo (para executar):
 
->> ./svm -d dimensaoSVM -l nomeArqLabelsTreino -t nomeArqVetTreino -k linear -a nomeArqPropAcertosTreino
+>> ./svm_train -d dimensaoSVM -l nomeArqLabelsTreino -t nomeArqVetTreino -k linear -a nomeArqPropAcertosTreino
 
 >> ./svm_train -d 4 -l treino_rotulos.ascii -t treino_dados.ascii -k linear -a PropAcertosTreino.ascii
 
