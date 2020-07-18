@@ -1,19 +1,3 @@
-// Modo de uso:
-
-// ./svm -d dimensaoSVM -l nomeArqLabelsTreino -t nomeArqVetTreino \
-//       -c nomeArqVetClassif -k linear -a nomeArqPropAcertosTreino \
-//       -s nomeArqLabelsClassif
-
-// dimensaoSVM é o número de elementos de cada vetor de treino
-// O arquivo com "labels" deve conter apenas uma coluna, com valores
-//   +1 ou -1, conforme as classes dos elementos de treino.
-// O arquivo de treino deve conter um vetor de treino em cada linha,
-//   com seus componentes separados entre si por espaços.
-// O arquivo nomeArqVetClassif contém os vetores a serem classificados.
-// Após -k, é indicado o tipo de kernel:
-// "linear", "poly", "rbf" ou "sigmoid".
-
-// Arquivos gerados: nomeArqPropAcertosTreino e nomeArqLabelsClassif.
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -42,15 +26,11 @@ int main( int argc, char** argv ) {
     nomeArqLabelsClassif[ 100 ];
   nomeArqLabelsTreino[ 0 ] = 0;
   nomeArqVetTreino[ 0 ] = 0;
-  //nomeArqVetClassif[ 0 ] = 0;
   while( ( opcaoGetopt = getopt( argc, argv, "a:d:k:l:t:" ) ) != -1 ) {
     switch( opcaoGetopt ) {
     case 'a':
       strcpy( nomeArqPropAcertosTreino, optarg );
       break;
-      //case 'c':
-      //strcpy( nomeArqVetClassif, optarg );
-      //break;
     case 'd':
       dimensaoSVM = atoi( optarg );
       break;
@@ -60,22 +40,17 @@ int main( int argc, char** argv ) {
     case 'l':
       strcpy( nomeArqLabelsTreino, optarg );
       break;
-      //case 's':
-      //strcpy( nomeArqLabelsClassif, optarg );
-      //break;
     case 't':
       strcpy( nomeArqVetTreino, optarg );
       break;
     }
   }
+  
   if( dimensaoSVM <= 0 ) {
     cout << "Faltou: -d dimensaoSVM\n";
     return -1;
   }
-  //if( strlen( nomeArqVetClassif ) == 0 ) {
-  //cout << "Faltou: -c nomeArqVetClassif\n";
-  //return -1;
-  // }
+
   if( strlen( nomeArqLabelsTreino ) == 0 ) {
     cout << "Faltou: -l nomeArqLabelsTreino\n";
     return -1;
@@ -88,10 +63,7 @@ int main( int argc, char** argv ) {
     cout << "Faltou: -a nomeArqPropAcertosTreino\n";
     return -1;
   }
-  //if( strlen( nomeArqLabelsClassif ) == 0 ) {
-  //cout << "Faltou: -s nomeArqLabelsClassif\n";
-  //return -1;
-  //}
+
   // Leitura do arqLabels e registro de seus dados:
   ifstream arqLabels( nomeArqLabelsTreino, ios::in );
   if( arqLabels.fail() ) {
@@ -114,6 +86,7 @@ int main( int argc, char** argv ) {
     labels[ indLabels ] = *itLabels;
   }
   Mat labelsMat( ltLabels.size(), 1, CV_32FC1, labels );
+  
   // Leitura do arqTreino e registro de seus dados:
   ifstream arqVetTreino( nomeArqVetTreino, ios::in );
   if( arqVetTreino.fail() ) {
@@ -137,6 +110,7 @@ int main( int argc, char** argv ) {
   }
   Mat vetTreinoDataMat( numCasosTreino, dimensaoSVM, CV_32FC1,
 		       vetoresTreinoArq );
+  
   // Configuração e treino da SVM:
   CvSVMParams params;
   params.svm_type = CvSVM::C_SVC;
@@ -161,6 +135,7 @@ int main( int argc, char** argv ) {
   params.term_crit = cvTermCriteria( CV_TERMCRIT_ITER, 100, 1e-6 );
   CvSVM SVM;
   SVM.train( vetTreinoDataMat, labelsMat, Mat(), Mat(), params );
+  
   // Verifica se os vetores dados para treinamento são corretamente
   // classificados pela mesma SVM:
   cout << "\n\nVerificação da SVM, por classificação dos vetores de treino:"
@@ -191,55 +166,8 @@ int main( int argc, char** argv ) {
   arqProporcAcertosTreino << 100 * float( contaAcertos ) / numCasosTreino
 			  << endl;
   arqProporcAcertosTreino.close();
-  // Leitura do arqClassif e registro de seus dados:
-  /*
-  ifstream arqClassif( nomeArqVetClassif, ios::in );
-  if( arqClassif.fail() ) {
-    cout << "Falha na abertura do arquivo " << nomeArqVetClassif << endl;
-    return -1;
-  }
-  int contaLinhasArqClassif = 0;
-  string linhaArqClassif;
-  while( getline( arqClassif, linhaArqClassif ) ) {
-    contaLinhasArqClassif++;
-  }
-  arqClassif.close();
-  cout << endl << nomeArqVetClassif << " tem " << contaLinhasArqClassif
-       << " vetores.\n";
-  arqClassif.open( nomeArqVetClassif, ios::in );
-  int numCasosClassif = contaLinhasArqClassif;
-  float vetoresClassifArq[ numCasosClassif ][ dimensaoSVM ];
-  for( int linha = 0; linha < numCasosClassif; linha++ ) {
-    for( int coluna = 0; coluna < dimensaoSVM; coluna++ ) {
-      arqClassif >> vetoresClassifArq[ linha ][ coluna ];
-    }
-  }
-  arqClassif.close();
-  cout << "\nVetores a serem classificados:\n";
-  for( int linha = 0; linha < numCasosClassif; linha++ ) {
-    for( int coluna = 0; coluna < dimensaoSVM; coluna++ ) {
-      cout << vetoresClassifArq[ linha ][ coluna ] << " ";
-    }
-    cout << endl;
-  }
-  // Classifica os vetores de nomeArqVetClassif:
-  cout << "\n\nClassificação dos vetores de " << nomeArqVetClassif
-       << " pela SVM\n\n";
-  ofstream arqLabelsClassif( nomeArqLabelsClassif, ios::out );
-  for( int linha = 0; linha < numCasosClassif; linha++ ) {
-    cout << "vetor: ";
-    float flVetor[ dimensaoSVM ];
-    for( int coluna = 0; coluna < dimensaoSVM; coluna++ ) {
-      cout << vetoresClassifArq[ linha ][ coluna ] << " ";
-      flVetor[ coluna ] = vetoresClassifArq[ linha ][ coluna ];
-    }
-    Mat matVetor( dimensaoSVM, 1, CV_32FC1, flVetor );
-    float classePrevista = SVM.predict( matVetor );
-    cout << ", classe: " << classePrevista << endl;
-    arqLabelsClassif << classePrevista << endl;
-  }
-  arqLabelsClassif.close();
-  */
+
+  //Salva o resultado do treinamento.
   SVM.save("resultado.txt");
   return 0;
 }
